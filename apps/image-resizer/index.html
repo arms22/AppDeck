@@ -16,7 +16,7 @@
     --accent-dim: #6b551f;
     --danger: #d3684f;
     --ok: #7fae7a;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", sans-serif;
+    font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -34,7 +34,7 @@
     flex-wrap: wrap;
   }
   header h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.02em; }
-  header .sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
+  header .sub { font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; font-size: 12px; color: var(--muted); }
   .launcher-link { margin-left: auto; color: var(--muted); font-size: 12px; text-decoration: none; }
   .launcher-link:hover { color: var(--accent); }
 
@@ -70,11 +70,11 @@
   .dropzone svg { width: 40px; height: 40px; stroke: var(--muted); }
   .dropzone.drag svg { stroke: var(--accent); }
   .dropzone p.main-text { font-size: 14px; color: var(--text); margin: 0; }
-  .dropzone p.sub-text { font-size: 12px; color: var(--muted); margin: 0; font-family: 'JetBrains Mono', monospace; }
+  .dropzone p.sub-text { font-size: 12px; color: var(--muted); margin: 0; font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; }
 
   .open-btn {
     margin-top: 6px; background: var(--panel); color: var(--text); border: 1px solid var(--line);
-    padding: 9px 18px; font-size: 13px; font-family: inherit; border-radius: 3px; cursor: pointer;
+    padding: 9px 18px; font-size: 13px; font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; border-radius: 3px; cursor: pointer;
     transition: border-color .15s ease, color .15s ease;
   }
   .open-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -103,7 +103,7 @@
 
   .compare-label {
     position: absolute; top: 10px; z-index: 3;
-    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em;
+    font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; font-size: 10px; letter-spacing: 0.05em;
     color: #fff; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 2px;
     pointer-events: none;
   }
@@ -128,11 +128,11 @@
 
   .stage-toolbar {
     display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted);
+    font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; font-size: 12px; color: var(--muted);
   }
   .stage-toolbar button {
     background: transparent; border: 1px solid var(--line); color: var(--muted);
-    padding: 6px 11px; font-family: inherit; font-size: 11px; border-radius: 3px; cursor: pointer;
+    padding: 6px 11px; font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; font-size: 11px; border-radius: 3px; cursor: pointer;
   }
   .stage-toolbar button:hover { color: var(--accent); border-color: var(--accent); }
   .stage-toolbar button.primary { color: var(--accent); border-color: var(--accent-dim); }
@@ -189,7 +189,7 @@
   .crop-ratios { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
   .crop-ratios button {
     background: var(--panel); border: 1px solid var(--line); color: var(--muted);
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 6px 10px;
+    font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; font-size: 11px; padding: 6px 10px;
     border-radius: 3px; cursor: pointer;
   }
   .crop-ratios button:hover { border-color: var(--accent); color: var(--accent); }
@@ -197,7 +197,7 @@
 
   .crop-actions { display: flex; gap: 10px; }
   .crop-actions button {
-    font-family: inherit; font-size: 13px; padding: 9px 18px; border-radius: 3px; cursor: pointer; border: 1px solid var(--line);
+    font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; font-size: 13px; padding: 9px 18px; border-radius: 3px; cursor: pointer; border: 1px solid var(--line);
   }
   .crop-actions .apply-btn { background: var(--accent); color: #1b1a18; border: none; font-weight: 700; }
   .crop-actions .cancel-btn { background: transparent; color: var(--muted); }
@@ -207,7 +207,7 @@
 
   .controls { padding: 24px 22px 32px; display: flex; flex-direction: column; gap: 22px; overflow-y: auto; }
   .controls fieldset { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-  .controls legend { font-size: 11px; color: var(--muted); padding: 0 0 8px 0; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; }
+  .controls legend { font-size: 11px; color: var(--muted); padding: 0 0 8px 0; font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; letter-spacing: 0.03em; }
 
   .row { display: flex; align-items: center; gap: 8px; }
   .field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
@@ -215,7 +215,7 @@
 
   input[type="number"], select {
     background: var(--panel); border: 1px solid var(--line); color: var(--text);
-    padding: 8px 9px; font-family: 'JetBrains Mono', monospace; font-size: 13px; border-radius: 3px; width: 100%;
+    padding: 8px 9px; font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; font-size: 13px; border-radius: 3px; width: 100%;
   }
   input[type="number"]:focus, select:focus { outline: none; border-color: var(--accent); }
   select { cursor: pointer; }
@@ -230,7 +230,7 @@
 
   .scale-row { display: flex; align-items: center; gap: 10px; }
   .scale-row input[type="range"] { flex: 1; }
-  .scale-row output { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); width: 44px; text-align: right; }
+  .scale-row output { font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; font-size: 12px; color: var(--accent); width: 44px; text-align: right; }
 
   input[type="range"] { -webkit-appearance: none; height: 3px; background: var(--line); border-radius: 2px; }
   input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; background: var(--accent); cursor: pointer; margin-top: -5px; }
@@ -243,14 +243,14 @@
   .presets { display: flex; flex-wrap: wrap; gap: 6px; }
   .presets button {
     background: var(--panel); border: 1px solid var(--line); color: var(--muted);
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 6px 9px; border-radius: 3px; cursor: pointer;
+    font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; font-size: 11px; padding: 6px 9px; border-radius: 3px; cursor: pointer;
   }
   .presets button:hover { border-color: var(--accent); color: var(--accent); }
 
   .crop-btn-row { display: flex; gap: 8px; }
   .crop-btn-row button {
     flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--text);
-    font-family: inherit; font-size: 12px; padding: 9px; border-radius: 3px; cursor: pointer;
+    font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; font-size: 12px; padding: 9px; border-radius: 3px; cursor: pointer;
   }
   .crop-btn-row button:hover { border-color: var(--accent); color: var(--accent); }
   .crop-btn-row button.reset-crop { color: var(--muted); }
@@ -261,7 +261,7 @@
 
   .divider { height: 1px; background: var(--line); border: none; margin: 0; }
 
-  .stat-table { font-family: 'JetBrains Mono', monospace; font-size: 12px; display: grid; grid-template-columns: auto 1fr; row-gap: 6px; column-gap: 12px; }
+  .stat-table { font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; font-size: 12px; display: grid; grid-template-columns: auto 1fr; row-gap: 6px; column-gap: 12px; }
   .stat-table dt { color: var(--muted); }
   .stat-table dd { margin: 0; text-align: right; color: var(--text); }
   .stat-table dd.highlight { color: var(--accent); }
@@ -270,7 +270,7 @@
 
   .download-btn {
     margin-top: 4px; background: var(--accent); color: var(--app-accent-text); border: none; padding: 12px;
-    font-size: 13px; font-weight: 700; font-family: inherit; border-radius: 3px; cursor: pointer;
+    font-size: 13px; font-weight: 700; font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; border-radius: 3px; cursor: pointer;
     transition: filter .15s ease;
   }
   .download-btn:hover { filter: brightness(1.08); }

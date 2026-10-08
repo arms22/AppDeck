@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>分圧抵抗計算 | App Deck</title>
+  <link rel="stylesheet" href="../../assets/app-theme.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-app-id="voltage-divider" data-app-title="分圧抵抗計算">
+  <main>
+    <p class="eyebrow">VOLTAGE DIVIDER</p>
+    <h1>分圧抵抗の組み合わせ</h1>
+    <p class="muted">目的の電圧や抵抗比に近い標準抵抗のペアを探します。</p>
+    <section class="panel input-panel">
+      <form id="parameters">
+        <label class="mode-field">計算モード<select id="mode"><option value="voltage">電圧から指定</option><option value="ratio">抵抗比から指定</option></select></label>
+        <label data-mode="voltage">入力電圧 Vin (V)<input id="vin" type="number" step="any" value="5" required /></label>
+        <label data-mode="voltage">ターゲット電圧 Vout (V)<input id="vout" type="number" step="any" value="3.3" required /></label>
+        <label data-mode="ratio" hidden>目標比 R1<input id="ratio-r1" type="number" step="any" value="1" disabled required /></label>
+        <label data-mode="ratio" hidden>目標比 R2<input id="ratio-r2" type="number" step="any" value="2" disabled required /></label>
+        <label>許容誤差 (%)<input id="tolerance" type="number" min="0" max="100" step="any" value="1" required /></label>
+        <label>抵抗系列<select id="series"><option>E6</option><option>E12</option><option selected>E24</option><option>E48</option><option>E96</option></select></label>
+        <fieldset class="resistance-range">
+          <legend>総抵抗値 R1 + R2 の範囲（任意・境界値を含む）</legend>
+          <div class="range-fields">
+            <div class="range-value">
+              <label>下限<input id="min-total" type="number" min="0" step="any" placeholder="制限なし" /></label>
+              <label>下限の単位<select id="min-unit"><option value="1">Ω</option><option value="1000" selected>kΩ</option><option value="1000000">MΩ</option></select></label>
+            </div>
+            <div class="range-value">
+              <label>上限<input id="max-total" type="number" min="0" step="any" placeholder="制限なし" /></label>
+              <label>上限の単位<select id="max-unit"><option value="1">Ω</option><option value="1000" selected>kΩ</option><option value="1000000">MΩ</option></select></label>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+      <details class="series-reference">
+        <summary>E系列の標準値一覧 <span id="series-selection" class="muted"></span></summary>
+        <p class="note muted">1以上10未満の基準値です。10の整数乗を掛けて抵抗値にします。例：1.33 → 13.3 Ω / 133 Ω / 1.33 kΩ / 13.3 kΩ。選択中の系列を強調表示しています。</p>
+        <div id="series-values"></div>
+        <p class="note muted">E48・E96は、E24のすべての値を含む系列ではありません。一覧は計算に使用する標準値と共通です。</p>
+      </details>
+      <p class="note muted">入力を変更すると自動計算します。総抵抗値の下限・上限は、空欄なら制限なしです。</p>
+      <p class="formula" id="formula">Vin ─ R1（上側）─ Vout ─ R2（下側）─ GND<br>Vout = Vin × R2 / (R1 + R2)</p>
+      <p class="note muted" id="error-help">許容誤差は目標電圧に対する絶対相対誤差です。</p>
+      <p class="note muted">探索範囲：各抵抗 10 Ω〜10 MΩ。抵抗の公称値で計算し、抵抗自体の公差は含みません。分圧計算は無負荷を想定しています。総抵抗値は R1 + R2（出力インピーダンスは R1 ∥ R2）です。</p>
+    </section>
+    <p id="status" role="status" aria-live="polite"></p>
+    <section class="summary" aria-label="計算サマリー">
+      <div class="panel"><span id="ratio-label">理想分圧比 Vout / Vin</span><strong id="ratio">—</strong></div>
+      <div class="panel"><span>候補数</span><strong id="count">—</strong></div>
+      <div class="panel"><span>最小誤差</span><strong id="best">—</strong></div>
+    </section>
+    <section class="panel results">
+      <div class="results-head"><h2>抵抗候補</h2><span class="muted">列名をクリックして並べ替え</span></div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th scope="col" data-key="r1"><button type="button">R1（上側）</button></th>
+          <th scope="col" data-key="r2"><button type="button">R2（下側）</button></th>
+          <th scope="col" data-key="value"><button id="value-heading" type="button">出力電圧</button></th>
+          <th scope="col" data-key="error"><button type="button">誤差 (%)</button></th>
+          <th scope="col" data-key="total"><button type="button">総抵抗値</button></th>
+          <th scope="col" data-key="grade"><button type="button">評価</button></th>
+        </tr></thead><tbody id="candidates"></tbody>
+      </table></div>
+      <div class="pagination"><button id="previous" type="button">← 前へ</button><span id="page-info"></span><button id="next" type="button">次へ →</button></div>
+    </section>
+  </main>
+  <script src="calculator.js"></script>
+  <script src="app.js"></script>
+  <script src="../../assets/theme.js"></script>
+</body>
+</html>

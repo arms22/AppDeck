@@ -1,0 +1,58 @@
+:root { color-scheme: dark; font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; background: var(--app-bg); color: var(--app-text); }
+body { margin: 0; }
+main { max-width: 1200px; margin: 36px auto; padding: 0 24px; }
+h1 { font-size: clamp(24px, 4vw, 34px); margin: 8px 0; }
+.eyebrow { font-size: 11px; letter-spacing: .18em; color: var(--app-accent); font-weight: 700; }
+.muted, .summary span { color: var(--app-muted); }
+.panel { background: var(--app-panel); border: 1px solid var(--app-line); border-radius: 12px; }
+.input-panel { padding: 24px; margin-top: 24px; }
+form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; align-items: end; }
+label { display: grid; gap: 9px; font-size: 13px; }
+[hidden] { display: none !important; }
+.mode-field { grid-column: 1 / -1; max-width: 320px; }
+.series-reference { margin-top: 20px; border: 1px solid var(--app-line); border-radius: 8px; padding: 14px; }
+.series-reference summary { cursor: pointer; font-size: 13px; font-weight: 700; }
+.series-reference summary span { font-weight: 400; margin-left: 8px; }
+.series-row { padding: 12px; margin-top: 12px; border: 1px solid var(--app-line); border-radius: 8px; }
+.series-row.selected { border-color: var(--app-accent); background: var(--app-panel-raised); }
+.series-row h3 { margin: 0 0 10px; font-size: 13px; }
+.series-numbers { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); gap: 6px; }
+.series-numbers span { padding: 5px; text-align: center; border-radius: 4px; background: var(--app-bg); font: 12px ui-monospace, monospace; }
+.resistance-range { grid-column: 1 / -1; border: 1px solid var(--app-line); border-radius: 8px; padding: 16px; margin: 4px 0 0; min-width: 0; }
+.resistance-range legend { font-size: 12px; color: var(--app-muted); padding: 0 6px; }
+.range-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.range-value { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+@media (max-width: 540px) { .range-fields { grid-template-columns: 1fr; } }
+input, select, button { font: inherit; color: var(--app-text); background: var(--app-bg); border: 1px solid var(--app-line); border-radius: 7px; padding: 11px 12px; min-width: 0; }
+button { cursor: pointer; }
+button:hover:not(:disabled) { background: var(--app-panel-raised); }
+button:disabled { opacity: .4; cursor: default; }
+:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 3px; }
+.formula { color: var(--app-accent); font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; line-height: 1.9; margin: 22px 0 12px; }
+.note { font-size: 12px; line-height: 1.8; margin-bottom: 0; }
+#status { min-height: 1.5em; font-size: 13px; color: var(--app-muted); }
+#status.error { color: var(--app-danger); }
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.summary .panel { padding: 20px; }
+.summary span { font-size: 12px; display: block; }
+.summary strong { display: block; font-size: 26px; margin-top: 10px; font-variant-numeric: tabular-nums; }
+.results { overflow: hidden; }
+.results-head { padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+h2 { font-size: 16px; margin: 0; }
+.results-head span { font-size: 12px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; white-space: nowrap; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 13px 20px; border-top: 1px solid var(--app-line); }
+th { background: var(--app-panel-raised); }
+th button { border: 0; padding: 0; background: transparent; font-size: 12px; }
+th[aria-sort="ascending"] button::after { content: " ↑"; color: var(--app-accent); }
+th[aria-sort="descending"] button::after { content: " ↓"; color: var(--app-accent); }
+.badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+.excellent { color: #81c995; background: #81c99522; }
+:root[data-theme="light"] .excellent { color: #218952; }
+.good { color: var(--app-accent); background: #5b8cff22; }
+.acceptable { color: var(--app-muted); background: var(--app-panel-raised); }
+.empty { text-align: center; color: var(--app-muted); padding: 32px; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 18px; padding: 16px; border-top: 1px solid var(--app-line); font-size: 12px; }
+@media (max-width: 900px) { form { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 540px) { main { padding: 0 14px; margin-top: 24px; } .input-panel { padding: 16px; } .summary { gap: 8px; } .summary .panel { padding: 12px; } .summary strong { font-size: 19px; } .results-head { align-items: start; flex-direction: column; } th, td { padding: 12px; } }

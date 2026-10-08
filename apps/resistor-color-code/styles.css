@@ -1,0 +1,22 @@
+body { margin: 0; background: var(--app-bg); color: var(--app-text); font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; }
+main { max-width: 1050px; margin: 36px auto; padding: 0 24px 36px; }
+h1 { font-size: clamp(24px, 4vw, 36px); margin: 8px 0; }
+.eyebrow { color: var(--app-accent); font-size: 12px; letter-spacing: .15em; }
+.muted { color: var(--app-muted); line-height: 1.7; }
+.panel { padding: 24px; margin: 24px 0; border: 1px solid var(--app-line); border-radius: 16px; background: var(--app-panel); }
+.inputs, .bands { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+label { display: grid; gap: 8px; font-size: 14px; }
+input, select { width: 100%; padding: 11px; font: inherit; border: 1px solid var(--app-line); border-radius: 8px; background: var(--app-bg); color: var(--app-text); }
+input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 3px; }
+.preview { position: relative; display: flex; align-items: center; justify-content: center; height: 150px; }
+.wire { position: absolute; width: 90%; height: 8px; border-radius: 4px; background: linear-gradient(#c8ced2, #727b80); }
+#resistor { position: relative; display: flex; justify-content: space-evenly; width: 360px; max-width: 75%; height: 90px; background: linear-gradient(#ebd5ac, #c4a476); border-radius: 30px; border: 2px solid #9b7e55; overflow: hidden; box-shadow: 0 8px 20px #0003; }
+.stripe { width: 20px; border-left: 1px solid #0003; border-right: 1px solid #0003; }
+.stripe.tolerance { margin-left: 26px; }
+.swatch { display: inline-block; width: 15px; height: 15px; border: 1px solid #888; border-radius: 50%; margin-right: 8px; }
+.band-title { display: flex; align-items: center; }
+#status { min-height: 24px; color: var(--app-danger); }
+.result strong { font-family: Arial, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif; font-size: clamp(28px, 5vw, 44px); color: var(--app-accent); }
+.note { font-size: 13px; }
+a { color: var(--app-accent); }
+@media (max-width: 640px) { main { padding: 0 14px 24px; }.panel { padding: 18px; }.inputs { grid-template-columns: 1fr 1fr; }.inputs label:first-child { grid-column: 1 / -1; }.bands { grid-template-columns: repeat(2, minmax(0, 1fr)); }.stripe { width: 14px; }.stripe.tolerance { margin-left: 12px; } }

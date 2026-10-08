@@ -6,16 +6,16 @@
   <meta name="theme-color" content="#1b1d1f" />
   <title>JSON フォーマッタ | App Deck</title>
   <style>
-    :root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Consolas, "Yu Gothic UI", monospace; background: var(--app-bg); color: var(--app-text); }
+    :root { color-scheme: dark; font-family: ui-monospace, Consolas, "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace; background: var(--app-bg); color: var(--app-text); }
     * { box-sizing: border-box; } body { margin: 0; min-height: 100vh; } button, textarea { font: inherit; }
     main { width: min(1120px, calc(100% - 32px)); margin: 34px auto; } .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
     button { border: 1px solid var(--app-line); border-radius: 8px; padding: 9px 13px; color: var(--app-text); background: var(--app-panel); cursor: pointer; font-size: 13px; }
     button.primary { background: var(--app-accent); border-color: var(--app-accent); color: var(--app-accent-text); font-weight: 700; } button:hover { filter: brightness(1.13); }
     .workspace { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; } .panel { min-height: 520px; display: flex; flex-direction: column; border: 1px solid var(--app-line); border-radius: 12px; overflow: hidden; background: var(--app-panel); }
-    .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--app-line); color: var(--app-muted); font-family: system-ui, sans-serif; font-size: 13px; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--app-line); color: var(--app-muted); font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; font-size: 13px; }
     textarea { width: 100%; min-height: 0; flex: 1; resize: vertical; padding: 16px; border: 0; outline: none; background: var(--app-bg); color: var(--app-text); font-size: 13px; line-height: 1.65; tab-size: 2; }
-    #status { margin-left: auto; color: var(--app-muted); font-family: system-ui, sans-serif; font-size: 12px; } #status.error { color: var(--app-danger); } #status.ok { color: #81c995; }
-    .hint { margin: 14px 0 0; color: var(--app-muted); font-family: system-ui, sans-serif; font-size: 12px; line-height: 1.6; }
+    #status { margin-left: auto; color: var(--app-muted); font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; font-size: 12px; } #status.error { color: var(--app-danger); } #status.ok { color: #81c995; }
+    .hint { margin: 14px 0 0; color: var(--app-muted); font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; font-size: 12px; line-height: 1.6; }
     @media (max-width: 760px) { header { padding: 0 16px; gap: 10px; } .tagline { display: none; } main { width: min(100% - 24px, 1120px); margin: 20px auto; } .workspace { grid-template-columns: 1fr; } .panel { min-height: 320px; } }
 </style>
   <link rel="stylesheet" href="../../assets/app-theme.css" />

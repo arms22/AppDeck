@@ -15,13 +15,21 @@ The launcher runtime is split across `src/`: `main.js` bootstraps hosted builds,
 - `npm run sync:manifest` regenerates `assets/manifest-fallback.js` after editing `apps.json`.
 - `npm run build:css` builds Tailwind CSS after Tailwind utility usage is added or changed.
 
-There is currently no automated test suite. Before submitting changes, open `index.html` directly and through a static server, then launch every enabled app.
+There is currently no automated test suite. Before submitting changes, open the launcher through a local static HTTP server, then launch every enabled app. Do not perform `file://` browser validation. Maintain the existing direct-file support and continue running `npm run sync:manifest` after editing `apps.json`.
 
 ## Coding Style & Naming Conventions
 
 Use two-space indentation in HTML, CSS, JSON, and JavaScript. Keep JavaScript as small ES modules with named exports. Use lowercase kebab-case for app IDs, directories, and asset filenames (`pdf-directory-search`); use camelCase for JavaScript variables and functions.
 
 Escape manifest-derived text before assigning it to `innerHTML`. Keep all app behavior local: do not add analytics, external fonts, remote APIs, or other network dependencies.
+
+## Japanese Text and Typography
+
+- Save text files as UTF-8 and set `lang="ja"` and `<meta charset="UTF-8">` on Japanese app pages.
+- Prefer locally installed Japanese fonts for Japanese UI text, such as `"Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif`.
+- Choose fonts appropriate for numeric results and technical symbols. Verify symbols such as Ω, μ, ±, and ° at the actual display size and font weight.
+- Review Japanese UI wording for correct characters and terminology. Check unfamiliar or ambiguous terms against reliable Japanese sources when needed.
+- Validate both the source text and its rendered appearance in the browser. Source review confirms the characters used; visual review confirms their glyphs and readability.
 
 ## Architecture and App Registration
 

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>抵抗器カラーコード計算機 | App Deck</title>
+  <link rel="stylesheet" href="../../assets/app-theme.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-app-id="resistor-color-code" data-app-title="抵抗器カラーコード計算機">
+  <main>
+    <p class="eyebrow">RESISTOR COLOR CODE</p>
+    <h1>抵抗器カラーコード計算機</h1>
+    <p class="muted">色から抵抗値を計算。抵抗値の入力でバンドの色を自動選択します。</p>
+    <section class="panel">
+      <div class="inputs">
+        <label>バンド数<select id="band-count"><option value="4">4 バンド（2桁）</option><option value="5">5 バンド（3桁）</option><option value="6">6 バンド（3桁 + PPM）</option></select></label>
+        <label>抵抗値<input id="resistance" type="number" min="0" step="any" value="4.7" aria-describedby="status" /></label>
+        <label>単位<select id="unit"><option value="1">Ω</option><option value="1000" selected>kΩ</option><option value="1000000">MΩ</option><option value="1000000000">GΩ</option></select></label>
+      </div>
+      <p id="status" role="status" aria-live="polite"></p>
+      <div class="preview" role="img" aria-label="抵抗器のバンド図"><div class="wire"></div><div id="resistor"></div></div>
+      <p id="color-description" class="muted"></p>
+      <div id="bands" class="bands"></div>
+    </section>
+    <section class="panel result" aria-live="polite" aria-label="計算結果">
+      <p class="muted">選択中のカラーコード</p>
+      <strong id="result"></strong>
+      <p id="range"></p>
+      <p id="formula" class="muted"></p>
+      <p id="ppm-result" class="muted"></p>
+    </section>
+    <p class="muted note">左から数字 → 乗数 → 公差（許容差）→ 温度係数の順です。PPM は6バンドのみで、1℃あたりの変化率を表します。抵抗値から公差・温度係数は決まらないため、選択を維持します。</p>
+    <p class="muted note">4バンドは有効数字2桁、5・6バンドは3桁。正確に表現できない値では色を変更せず、エラーを表示します。0 Ωは単一の黒バンドで表すため対象外です。</p>
+    <a href="../../index.html#/">← App Deck に戻る</a>
+  </main>
+  <script src="calculator.js"></script>
+  <script src="app.js"></script>
+  <script src="../../assets/theme.js"></script>
+</body>
+</html>
