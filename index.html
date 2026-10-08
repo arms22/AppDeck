@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <title>App Deck</title>
+    <link rel="stylesheet" href="./assets/styles.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- file:// で直接開く場合だけ、下記のスタンドアロン起動器が動作します。 -->
+    <script src="./assets/manifest-fallback.js"></script>
+    <script src="./src/standalone.js"></script>
+    <!-- 静的サーバーから配信する場合は JSON + モジュール版を使用します。 -->
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

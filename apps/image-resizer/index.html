@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>画像リサイズツール | App Deck</title>
+<style>
+  :root{
+    --bg: #1b1a18;
+    --panel: #232220;
+    --panel-2: #29281f;
+    --line: #3a3830;
+    --text: #ece7dc;
+    --muted: #948e7f;
+    --accent: #e2a53a;
+    --accent-dim: #6b551f;
+    --danger: #d3684f;
+    --ok: #7fae7a;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body { margin: 0; background: var(--bg); color: var(--text); height: 100%; }
+
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+
+  header {
+    padding: 22px 28px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.02em; }
+  header .sub { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
+  .launcher-link { margin-left: auto; color: var(--muted); font-size: 12px; text-decoration: none; }
+  .launcher-link:hover { color: var(--accent); }
+
+  main { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+
+  /* ---------- LEFT: stage ---------- */
+
+  .stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    border-right: 1px solid var(--line);
+    background:
+      linear-gradient(var(--panel-2) 1px, transparent 1px) 0 0 / 100% 28px,
+      var(--bg);
+    min-height: 380px;
+    overflow: hidden;
+  }
+  @media (max-width: 860px) { .stage { border-right: none; border-bottom: 1px solid var(--line); } }
+
+  .dropzone {
+    width: 100%; height: 100%; min-height: 320px;
+    border: 1.5px dashed var(--line); border-radius: 4px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; text-align: center; padding: 40px; cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .dropzone.drag { border-color: var(--accent); background: rgba(226,165,58,0.06); }
+  .dropzone svg { width: 40px; height: 40px; stroke: var(--muted); }
+  .dropzone.drag svg { stroke: var(--accent); }
+  .dropzone p.main-text { font-size: 14px; color: var(--text); margin: 0; }
+  .dropzone p.sub-text { font-size: 12px; color: var(--muted); margin: 0; font-family: 'JetBrains Mono', monospace; }
+
+  .open-btn {
+    margin-top: 6px; background: var(--panel); color: var(--text); border: 1px solid var(--line);
+    padding: 9px 18px; font-size: 13px; font-family: inherit; border-radius: 3px; cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .open-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #fileInput { display: none; }
+
+  /* ---------- compare view ---------- */
+
+  .preview-wrap { width: 100%; display: none; flex-direction: column; gap: 14px; align-items: center; }
+  .preview-wrap.active { display: flex; }
+
+  .checker {
+    background: repeating-conic-gradient(#2a2924 0% 25%, #232220 0% 50%) 50% / 16px 16px;
+  }
+
+  #compareBox {
+    position: relative;
+    margin: 0 auto;
+    border: 1px solid var(--line);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    overflow: hidden;
+    touch-action: none;
+    max-width: 100%;
+  }
+  #compareBox canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #afterCanvas { z-index: 2; }
+
+  .compare-label {
+    position: absolute; top: 10px; z-index: 3;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em;
+    color: #fff; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 2px;
+    pointer-events: none;
+  }
+  .compare-label.after { left: 10px; }
+  .compare-label.before { right: 10px; }
+
+  #dragBar {
+    position: absolute; top: 0; bottom: 0; z-index: 4;
+    width: 0; border-left: 1.5px solid var(--accent);
+    cursor: ew-resize;
+    transform: translateX(-0.75px);
+  }
+  #dragBar .handle {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent); color: #1b1a18;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
+  #dragBar .handle svg { width: 15px; height: 15px; }
+  #dragBar.active .handle { filter: brightness(1.1); }
+
+  .stage-toolbar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted);
+  }
+  .stage-toolbar button {
+    background: transparent; border: 1px solid var(--line); color: var(--muted);
+    padding: 6px 11px; font-family: inherit; font-size: 11px; border-radius: 3px; cursor: pointer;
+  }
+  .stage-toolbar button:hover { color: var(--accent); border-color: var(--accent); }
+  .stage-toolbar button.primary { color: var(--accent); border-color: var(--accent-dim); }
+
+  /* ---------- crop editing view ---------- */
+
+  #cropStage { width: 100%; display: none; flex-direction: column; align-items: center; gap: 16px; }
+  #cropStage.active { display: flex; }
+  .preview-wrap.crop-hidden { display: none; }
+
+  .crop-frame-wrap {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; max-height: 58vh;
+  }
+  #cropFrame {
+    position: relative; display: inline-block; line-height: 0;
+    max-width: 100%; max-height: 58vh;
+    touch-action: none;
+  }
+  #cropImg { display: block; max-width: 100%; max-height: 58vh; width: auto; height: auto; user-select: none; -webkit-user-drag: none; }
+
+  #cropRect {
+    position: absolute;
+    border: 1.5px solid var(--accent);
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.62);
+    cursor: move;
+  }
+  #cropRect::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.35) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.35) 1px, transparent 1px);
+    background-size: 33.333% 100%, 100% 33.333%;
+    pointer-events: none;
+  }
+
+  .crop-handle {
+    position: absolute; width: 14px; height: 14px; background: var(--accent);
+    border: 2px solid #1b1a18; border-radius: 2px; z-index: 2;
+  }
+  .crop-handle.edge { background: var(--accent); opacity: 0.9; }
+  #cropRect.locked .crop-handle.edge { display: none; }
+
+  .crop-handle.nw { top: -7px; left: -7px; cursor: nwse-resize; }
+  .crop-handle.ne { top: -7px; right: -7px; cursor: nesw-resize; }
+  .crop-handle.sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+  .crop-handle.se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+  .crop-handle.n { top: -7px; left: 50%; margin-left: -7px; cursor: ns-resize; }
+  .crop-handle.s { bottom: -7px; left: 50%; margin-left: -7px; cursor: ns-resize; }
+  .crop-handle.w { left: -7px; top: 50%; margin-top: -7px; cursor: ew-resize; }
+  .crop-handle.e { right: -7px; top: 50%; margin-top: -7px; cursor: ew-resize; }
+
+  .crop-ratios { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .crop-ratios button {
+    background: var(--panel); border: 1px solid var(--line); color: var(--muted);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 6px 10px;
+    border-radius: 3px; cursor: pointer;
+  }
+  .crop-ratios button:hover { border-color: var(--accent); color: var(--accent); }
+  .crop-ratios button.active { border-color: var(--accent); color: var(--accent); background: rgba(226,165,58,0.08); }
+
+  .crop-actions { display: flex; gap: 10px; }
+  .crop-actions button {
+    font-family: inherit; font-size: 13px; padding: 9px 18px; border-radius: 3px; cursor: pointer; border: 1px solid var(--line);
+  }
+  .crop-actions .apply-btn { background: var(--accent); color: #1b1a18; border: none; font-weight: 700; }
+  .crop-actions .cancel-btn { background: transparent; color: var(--muted); }
+  .crop-actions .cancel-btn:hover { color: var(--text); }
+
+  /* ---------- RIGHT: controls ---------- */
+
+  .controls { padding: 24px 22px 32px; display: flex; flex-direction: column; gap: 22px; overflow-y: auto; }
+  .controls fieldset { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .controls legend { font-size: 11px; color: var(--muted); padding: 0 0 8px 0; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; }
+
+  .row { display: flex; align-items: center; gap: 8px; }
+  .field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .field label { font-size: 11px; color: var(--muted); }
+
+  input[type="number"], select {
+    background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    padding: 8px 9px; font-family: 'JetBrains Mono', monospace; font-size: 13px; border-radius: 3px; width: 100%;
+  }
+  input[type="number"]:focus, select:focus { outline: none; border-color: var(--accent); }
+  select { cursor: pointer; }
+
+  .link-toggle {
+    width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 3px; cursor: pointer;
+    color: var(--muted); margin-top: 16px; transition: color .15s ease, border-color .15s ease;
+  }
+  .link-toggle.active { color: var(--accent); border-color: var(--accent-dim); }
+  .link-toggle svg { width: 15px; height: 15px; }
+
+  .scale-row { display: flex; align-items: center; gap: 10px; }
+  .scale-row input[type="range"] { flex: 1; }
+  .scale-row output { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); width: 44px; text-align: right; }
+
+  input[type="range"] { -webkit-appearance: none; height: 3px; background: var(--line); border-radius: 2px; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; background: var(--accent); cursor: pointer; margin-top: -5px; }
+  input[type="range"]::-moz-range-thumb { width: 13px; height: 13px; border: none; border-radius: 50%; background: var(--accent); cursor: pointer; }
+  input[type="range"]::-moz-range-track { height: 3px; background: var(--line); border-radius: 2px; }
+
+  .quality-row { display: none; }
+  .quality-row.show { display: flex; }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; }
+  .presets button {
+    background: var(--panel); border: 1px solid var(--line); color: var(--muted);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 6px 9px; border-radius: 3px; cursor: pointer;
+  }
+  .presets button:hover { border-color: var(--accent); color: var(--accent); }
+
+  .crop-btn-row { display: flex; gap: 8px; }
+  .crop-btn-row button {
+    flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    font-family: inherit; font-size: 12px; padding: 9px; border-radius: 3px; cursor: pointer;
+  }
+  .crop-btn-row button:hover { border-color: var(--accent); color: var(--accent); }
+  .crop-btn-row button.reset-crop { color: var(--muted); }
+  .crop-btn-row button.active { border-color: var(--accent-dim); color: var(--accent); background: rgba(226,165,58,0.08); }
+  .crop-btn-row + .crop-btn-row { margin-top: 8px; }
+
+  .crop-ratios button.swap-btn { border-color: var(--accent-dim); color: var(--accent); }
+
+  .divider { height: 1px; background: var(--line); border: none; margin: 0; }
+
+  .stat-table { font-family: 'JetBrains Mono', monospace; font-size: 12px; display: grid; grid-template-columns: auto 1fr; row-gap: 6px; column-gap: 12px; }
+  .stat-table dt { color: var(--muted); }
+  .stat-table dd { margin: 0; text-align: right; color: var(--text); }
+  .stat-table dd.highlight { color: var(--accent); }
+  .stat-table dd.down { color: var(--ok); }
+  .stat-table dd.up { color: var(--danger); }
+
+  .download-btn {
+    margin-top: 4px; background: var(--accent); color: #1b1a18; border: none; padding: 12px;
+    font-size: 13px; font-weight: 700; font-family: inherit; border-radius: 3px; cursor: pointer;
+    transition: filter .15s ease;
+  }
+  .download-btn:hover { filter: brightness(1.08); }
+  .download-btn:disabled { background: var(--panel); color: var(--muted); cursor: not-allowed; }
+
+  .controls.disabled { opacity: 0.4; pointer-events: none; }
+
+  .switch-row { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+  .switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .switch-track {
+    position: absolute; inset: 0; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 999px; cursor: pointer; transition: background .15s ease, border-color .15s ease;
+  }
+  .switch-thumb {
+    position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--muted); transition: transform .15s ease, background .15s ease;
+  }
+  .switch input:checked + .switch-track { border-color: var(--accent-dim); background: rgba(226,165,58,0.12); }
+  .switch input:checked + .switch-track .switch-thumb { transform: translateX(16px); background: var(--accent); }
+  .switch-label { font-size: 12px; color: var(--muted); cursor: pointer; }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+</style>
+</head>
+<body data-app-id="image-resizer">
+
+<header>
+  <h1>画像リサイズツール</h1>
+  <span class="sub">crop · resize · resolution · quality — ブラウザ内で完結、アップロードなし</span>
+  <a class="launcher-link" href="../../index.html#/">← App Deck に戻る</a>
+</header>
+
+<main>
+  <section class="stage" id="stage">
+    <div class="dropzone" id="dropzone">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+      </svg>
+      <p class="main-text">画像をここにドラッグ&ドロップ</p>
+      <p class="sub-text">JPEG / PNG / WEBP / GIF</p>
+      <button class="open-btn" id="openBtn" type="button">ファイルを開く</button>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <!-- compare view -->
+    <div class="preview-wrap" id="previewWrap">
+      <div id="compareBox" class="checker">
+        <canvas id="beforeCanvas"></canvas>
+        <canvas id="afterCanvas"></canvas>
+        <span class="compare-label after">AFTER</span>
+        <span class="compare-label before">BEFORE</span>
+        <div id="dragBar">
+          <div class="handle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="stage-toolbar">
+        <span id="previewLabel">—</span>
+        <button id="cropModeBtn" type="button">クロップ</button>
+        <button id="newImageBtn" type="button">別の画像を開く</button>
+      </div>
+    </div>
+
+    <!-- crop editing view -->
+    <div id="cropStage">
+      <div class="crop-frame-wrap">
+        <div id="cropFrame">
+          <img id="cropImg" alt="">
+          <div id="cropRect">
+            <div class="crop-handle n edge" data-handle="n"></div>
+            <div class="crop-handle s edge" data-handle="s"></div>
+            <div class="crop-handle e edge" data-handle="e"></div>
+            <div class="crop-handle w edge" data-handle="w"></div>
+            <div class="crop-handle nw" data-handle="nw"></div>
+            <div class="crop-handle ne" data-handle="ne"></div>
+            <div class="crop-handle sw" data-handle="sw"></div>
+            <div class="crop-handle se" data-handle="se"></div>
+          </div>
+        </div>
+      </div>
+      <div class="crop-ratios" id="cropRatios">
+        <button class="swap-btn" id="cropSwapBtn" type="button" title="縦横を入れ替え">⇄ 縦横</button>
+        <button data-ratio="free" class="active" type="button">自由</button>
+        <button data-ratio="orig" type="button">元の比率</button>
+        <button data-ratio="1:1" type="button">1:1</button>
+        <button data-ratio="5:4" type="button">5:4</button>
+        <button data-ratio="4:3" type="button">4:3</button>
+        <button data-ratio="3:2" type="button">3:2</button>
+        <button data-ratio="16:9" type="button">16:9</button>
+      </div>
+      <div class="crop-actions">
+        <button class="cancel-btn" id="cropCancelBtn" type="button">キャンセル</button>
+        <button class="apply-btn" id="cropApplyBtn" type="button">適用</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="controls disabled" id="controls">
+
+    <fieldset>
+      <legend>回転・反転 / ROTATE & FLIP</legend>
+      <div class="crop-btn-row">
+        <button id="rotateLeftBtn" type="button" title="反時計回りに90度回転">↺ 90°</button>
+        <button id="rotateRightBtn" type="button" title="時計回りに90度回転">↻ 90°</button>
+      </div>
+      <div class="crop-btn-row">
+        <button id="flipHBtn" type="button" title="左右反転">⇋ 左右反転</button>
+        <button id="flipVBtn" type="button" title="上下反転">⇵ 上下反転</button>
+      </div>
+      <div class="field">
+        <label for="angleRange">傾き補正(水平出し)</label>
+        <div class="scale-row">
+          <input type="range" id="angleRange" min="-45" max="45" step="0.1" value="0">
+          <output id="angleValue">0.0°</output>
+        </div>
+      </div>
+    </fieldset>
+
+    <hr class="divider">
+
+    <fieldset>
+      <legend>クロップ / CROP</legend>
+      <dl class="stat-table">
+        <dt>選択範囲</dt><dd id="cropInfo">画像全体</dd>
+      </dl>
+      <div class="crop-btn-row">
+        <button id="cropOpenBtn" type="button">範囲を選択</button>
+        <button class="reset-crop" id="cropResetBtn" type="button">リセット</button>
+      </div>
+    </fieldset>
+
+    <hr class="divider">
+
+    <fieldset>
+      <legend>寸法 / DIMENSIONS</legend>
+      <div class="row">
+        <div class="field">
+          <label for="widthInput">幅 (px)</label>
+          <input type="number" id="widthInput" min="1" step="1">
+        </div>
+        <button class="link-toggle active" id="linkToggle" type="button" title="縦横比を固定">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 17H7a5 5 0 010-10h2M15 7h2a5 5 0 010 10h-2M8 12h8"/></svg>
+        </button>
+        <div class="field">
+          <label for="heightInput">高さ (px)</label>
+          <input type="number" id="heightInput" min="1" step="1">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>倍率スケール</label>
+        <div class="scale-row">
+          <input type="range" id="scaleRange" min="1" max="200" value="100">
+          <output id="scaleValue">100%</output>
+        </div>
+      </div>
+
+      <div class="presets">
+        <button data-scale="25" type="button">25%</button>
+        <button data-scale="50" type="button">50%</button>
+        <button data-scale="75" type="button">75%</button>
+        <button data-scale="100" type="button">100%</button>
+        <button data-w="1920" data-h="1080" type="button">1920×1080</button>
+        <button data-w="1280" data-h="720" type="button">1280×720</button>
+      </div>
+    </fieldset>
+
+    <hr class="divider">
+
+    <fieldset>
+      <legend>出力形式 / FORMAT</legend>
+      <div class="field">
+        <label for="formatSelect">ファイル形式</label>
+        <select id="formatSelect">
+          <option value="original">元の形式のまま</option>
+          <option value="image/jpeg">JPEG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WEBP</option>
+        </select>
+      </div>
+
+      <div class="row quality-row" id="qualityRow">
+        <div class="field">
+          <label>品質</label>
+          <div class="scale-row">
+            <input type="range" id="qualityRange" min="1" max="100" value="85">
+            <output id="qualityValue">85%</output>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <hr class="divider">
+
+    <fieldset>
+      <legend>情報 / INFO</legend>
+      <dl class="stat-table">
+        <dt>元のサイズ</dt><dd id="origDim">—</dd>
+        <dt>出力サイズ</dt><dd id="outDim">—</dd>
+        <dt>元のファイル容量</dt><dd id="origSize">—</dd>
+        <dt>推定出力容量</dt><dd id="outSize" class="highlight">—</dd>
+      </dl>
+    </fieldset>
+
+    <label class="switch-row">
+      <span class="switch">
+        <input type="checkbox" id="filenameSizeToggle" checked>
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+      </span>
+      <span class="switch-label">ファイル名にサイズを付与</span>
+    </label>
+
+    <button class="download-btn" id="downloadBtn" disabled>ダウンロード</button>
+  </section>
+</main>
+
+<script>
+(() => {
+  // ---------- elements ----------
+  const dropzone = document.getElementById('dropzone');
+  const stage = document.getElementById('stage');
+  const fileInput = document.getElementById('fileInput');
+  const openBtn = document.getElementById('openBtn');
+  const newImageBtn = document.getElementById('newImageBtn');
+  const previewWrap = document.getElementById('previewWrap');
+
+  const compareBox = document.getElementById('compareBox');
+  const beforeCanvas = document.getElementById('beforeCanvas');
+  const afterCanvas = document.getElementById('afterCanvas');
+  const beforeCtx = beforeCanvas.getContext('2d');
+  const afterCtx = afterCanvas.getContext('2d');
+  const dragBar = document.getElementById('dragBar');
+  const previewLabel = document.getElementById('previewLabel');
+
+  const cropModeBtn = document.getElementById('cropModeBtn');
+  const cropOpenBtn = document.getElementById('cropOpenBtn');
+  const cropResetBtn = document.getElementById('cropResetBtn');
+  const cropStage = document.getElementById('cropStage');
+  const cropFrame = document.getElementById('cropFrame');
+  const cropImg = document.getElementById('cropImg');
+  const cropRect = document.getElementById('cropRect');
+  const cropRatios = document.getElementById('cropRatios');
+  const cropSwapBtn = document.getElementById('cropSwapBtn');
+  const cropApplyBtn = document.getElementById('cropApplyBtn');
+  const cropCancelBtn = document.getElementById('cropCancelBtn');
+  const cropInfo = document.getElementById('cropInfo');
+
+  const rotateLeftBtn = document.getElementById('rotateLeftBtn');
+  const rotateRightBtn = document.getElementById('rotateRightBtn');
+  const flipHBtn = document.getElementById('flipHBtn');
+  const flipVBtn = document.getElementById('flipVBtn');
+  const angleRange = document.getElementById('angleRange');
+  const angleValue = document.getElementById('angleValue');
+
+  const controls = document.getElementById('controls');
+  const widthInput = document.getElementById('widthInput');
+  const heightInput = document.getElementById('heightInput');
+  const linkToggle = document.getElementById('linkToggle');
+  const scaleRange = document.getElementById('scaleRange');
+  const scaleValue = document.getElementById('scaleValue');
+  const formatSelect = document.getElementById('formatSelect');
+  const qualityRow = document.getElementById('qualityRow');
+  const qualityRange = document.getElementById('qualityRange');
+  const qualityValue = document.getElementById('qualityValue');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const filenameSizeToggle = document.getElementById('filenameSizeToggle');
+
+  const origDimEl = document.getElementById('origDim');
+  const outDimEl = document.getElementById('outDim');
+  const origSizeEl = document.getElementById('origSize');
+  const outSizeEl = document.getElementById('outSize');
+
+  const outputCanvas = document.createElement('canvas'); // offscreen, for encoding/download only
+  const outputCtx = outputCanvas.getContext('2d');
+
+  const workCanvas = document.createElement('canvas'); // offscreen: img after rotate/flip/straighten
+  const workCtx = workCanvas.getContext('2d');
+
+  // ---------- state ----------
+  let img = null;
+  let dataURL = '';
+  let origWidth = 0, origHeight = 0, origFileSize = 0, origFileType = '', origFileName = 'image';
+  let workW = 0, workH = 0; // dimensions of workCanvas (post rotate/flip/straighten)
+  let transform = { rot90: 0, flipH: false, flipV: false, angle: 0 };
+  let crop = { x: 0, y: 0, w: 0, h: 0 }; // in workCanvas pixel coords
+  let aspectLocked = true;
+  let debounceTimer = null;
+  let transformDebounce = null;
+  let barPct = 50; // compare slider position
+
+  function humanSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+  }
+
+  // ---------- rotate / flip / straighten ----------
+
+  // Largest axis-aligned rectangle (same aspect ratio as w×h) that fits
+  // inside a w×h rectangle after it has been rotated by angleRad, without
+  // showing any empty corner. Standard "de-rotate crop" formula.
+  function rotatedRectWithMaxArea(w, h, angleRad) {
+    if (w <= 0 || h <= 0) return { w: 0, h: 0 };
+    const widthIsLonger = w >= h;
+    const sideLong = widthIsLonger ? w : h;
+    const sideShort = widthIsLonger ? h : w;
+    const sinA = Math.abs(Math.sin(angleRad));
+    const cosA = Math.abs(Math.cos(angleRad));
+    if (sideShort <= 2 * sinA * cosA * sideLong || Math.abs(sinA - cosA) < 1e-10) {
+      const x = 0.5 * sideShort;
+      let wr, hr;
+      if (widthIsLonger) { wr = x / sinA; hr = x / cosA; } else { wr = x / cosA; hr = x / sinA; }
+      return { w: wr, h: hr };
+    }
+    const cos2A = cosA * cosA - sinA * sinA;
+    return { w: (w * cosA - h * sinA) / cos2A, h: (h * cosA - w * sinA) / cos2A };
+  }
+
+  // Rebuilds workCanvas = img after rot90 + flip + fine-angle straighten,
+  // auto-cropped so no transparent corners are introduced by the straighten step.
+  function buildWorkCanvas() {
+    if (!img) return;
+    const rot = ((transform.rot90 % 360) + 360) % 360;
+    const swap = (rot === 90 || rot === 270);
+    const iw = swap ? origHeight : origWidth;
+    const ih = swap ? origWidth : origHeight;
+
+    const interCanvas = document.createElement('canvas');
+    interCanvas.width = iw; interCanvas.height = ih;
+    const ictx = interCanvas.getContext('2d');
+    ictx.save();
+    ictx.translate(iw / 2, ih / 2);
+    ictx.rotate(rot * Math.PI / 180);
+    ictx.scale(transform.flipH ? -1 : 1, transform.flipV ? -1 : 1);
+    ictx.drawImage(img, -origWidth / 2, -origHeight / 2);
+    ictx.restore();
+
+    const angleRad = transform.angle * Math.PI / 180;
+    if (Math.abs(transform.angle) < 0.01) {
+      workCanvas.width = iw; workCanvas.height = ih;
+      workCtx.clearRect(0, 0, iw, ih);
+      workCtx.drawImage(interCanvas, 0, 0);
+    } else {
+      const boundW = Math.abs(iw * Math.cos(angleRad)) + Math.abs(ih * Math.sin(angleRad));
+      const boundH = Math.abs(iw * Math.sin(angleRad)) + Math.abs(ih * Math.cos(angleRad));
+      const rotatedCanvas = document.createElement('canvas');
+      rotatedCanvas.width = Math.ceil(boundW);
+      rotatedCanvas.height = Math.ceil(boundH);
+      const rctx = rotatedCanvas.getContext('2d');
+      rctx.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
+      rctx.rotate(angleRad);
+      rctx.drawImage(interCanvas, -iw / 2, -ih / 2);
+
+      const { w: cw, h: ch } = rotatedRectWithMaxArea(iw, ih, angleRad);
+      const outW = Math.max(1, Math.round(cw));
+      const outH = Math.max(1, Math.round(ch));
+      workCanvas.width = outW; workCanvas.height = outH;
+      workCtx.clearRect(0, 0, outW, outH);
+      workCtx.drawImage(
+        rotatedCanvas,
+        (rotatedCanvas.width - cw) / 2, (rotatedCanvas.height - ch) / 2, cw, ch,
+        0, 0, outW, outH
+      );
+    }
+    workW = workCanvas.width;
+    workH = workCanvas.height;
+  }
+
+  // Any rotate/flip/angle change invalidates the current crop selection
+  // (simplest, predictable behavior — the crop resets to the full new frame).
+  function onTransformChange() {
+    if (!img) return;
+    buildWorkCanvas();
+    crop = { x: 0, y: 0, w: workW, h: workH };
+    widthInput.value = workW;
+    heightInput.value = workH;
+    scaleRange.value = 100;
+    scaleValue.textContent = '100%';
+    updateCropInfo();
+    render();
+  }
+
+  rotateLeftBtn.addEventListener('click', () => { transform.rot90 -= 90; onTransformChange(); });
+  rotateRightBtn.addEventListener('click', () => { transform.rot90 += 90; onTransformChange(); });
+  flipHBtn.addEventListener('click', () => {
+    transform.flipH = !transform.flipH;
+    flipHBtn.classList.toggle('active', transform.flipH);
+    onTransformChange();
+  });
+  flipVBtn.addEventListener('click', () => {
+    transform.flipV = !transform.flipV;
+    flipVBtn.classList.toggle('active', transform.flipV);
+    onTransformChange();
+  });
+  angleRange.addEventListener('input', () => {
+    transform.angle = parseFloat(angleRange.value);
+    angleValue.textContent = transform.angle.toFixed(1) + '°';
+    clearTimeout(transformDebounce);
+    transformDebounce = setTimeout(onTransformChange, 16);
+  });
+
+  // ---------- file loading ----------
+  function loadFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    origFileSize = file.size;
+    origFileType = file.type;
+    origFileName = file.name.replace(/\.[^.]+$/, '') || 'image';
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      dataURL = e.target.result;
+      const image = new Image();
+      image.onload = () => {
+        img = image;
+        origWidth = image.naturalWidth;
+        origHeight = image.naturalHeight;
+
+        transform = { rot90: 0, flipH: false, flipV: false, angle: 0 };
+        angleRange.value = 0;
+        angleValue.textContent = '0.0°';
+        flipHBtn.classList.remove('active');
+        flipVBtn.classList.remove('active');
+        buildWorkCanvas();
+
+        crop = { x: 0, y: 0, w: workW, h: workH };
+
+        widthInput.value = workW;
+        heightInput.value = workH;
+        scaleRange.value = 100;
+        scaleValue.textContent = '100%';
+
+        formatSelect.value = 'original';
+        updateQualityVisibility();
+
+        dropzone.style.display = 'none';
+        previewWrap.classList.add('active');
+        controls.classList.remove('disabled');
+
+        origDimEl.textContent = `${origWidth} × ${origHeight}px`;
+        origSizeEl.textContent = humanSize(origFileSize);
+        updateCropInfo();
+
+        render();
+      };
+      image.src = dataURL;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  openBtn.addEventListener('click', () => fileInput.click());
+  newImageBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (e) => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+  ['dragenter', 'dragover'].forEach(evt => {
+    stage.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    stage.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('drag'); });
+  });
+  stage.addEventListener('drop', (e) => { const file = e.dataTransfer.files[0]; if (file) loadFile(file); });
+
+  // ---------- source dimensions (crop-aware) ----------
+  function srcW() { return crop.w; }
+  function srcH() { return crop.h; }
+
+  function updateCropInfo() {
+    if (crop.x === 0 && crop.y === 0 && crop.w === workW && crop.h === workH) {
+      cropInfo.textContent = '画像全体';
+    } else {
+      cropInfo.textContent = `${crop.w} × ${crop.h}px`;
+    }
+  }
+
+  // ---------- dimension controls ----------
+  function currentTargetType() {
+    return formatSelect.value === 'original' ? (origFileType || 'image/png') : formatSelect.value;
+  }
+  function updateQualityVisibility() {
+    const t = currentTargetType();
+    qualityRow.classList.toggle('show', t === 'image/jpeg' || t === 'image/webp');
+  }
+  formatSelect.addEventListener('change', () => { updateQualityVisibility(); render(); });
+
+  linkToggle.addEventListener('click', () => {
+    aspectLocked = !aspectLocked;
+    linkToggle.classList.toggle('active', aspectLocked);
+  });
+
+  widthInput.addEventListener('input', () => {
+    if (!img) return;
+    const w = parseInt(widthInput.value, 10) || 0;
+    if (aspectLocked && w > 0) heightInput.value = Math.round(w * srcH() / srcW());
+    syncScaleFromWidth();
+    render();
+  });
+  heightInput.addEventListener('input', () => {
+    if (!img) return;
+    const h = parseInt(heightInput.value, 10) || 0;
+    if (aspectLocked && h > 0) widthInput.value = Math.round(h * srcW() / srcH());
+    syncScaleFromWidth();
+    render();
+  });
+  function syncScaleFromWidth() {
+    if (!srcW()) return;
+    const w = parseInt(widthInput.value, 10) || 0;
+    const pct = Math.round((w / srcW()) * 100);
+    scaleRange.value = Math.min(200, Math.max(1, pct));
+    scaleValue.textContent = scaleRange.value + '%';
+  }
+  scaleRange.addEventListener('input', () => {
+    if (!img) return;
+    const pct = parseInt(scaleRange.value, 10);
+    scaleValue.textContent = pct + '%';
+    widthInput.value = Math.round(srcW() * pct / 100);
+    heightInput.value = Math.round(srcH() * pct / 100);
+    render();
+  });
+  document.querySelectorAll('.presets button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!img) return;
+      if (btn.dataset.scale) {
+        scaleRange.value = btn.dataset.scale;
+        scaleRange.dispatchEvent(new Event('input'));
+      } else if (btn.dataset.w) {
+        aspectLocked = false;
+        linkToggle.classList.remove('active');
+        widthInput.value = btn.dataset.w;
+        heightInput.value = btn.dataset.h;
+        syncScaleFromWidth();
+        render();
+      }
+    });
+  });
+  qualityRange.addEventListener('input', () => {
+    qualityValue.textContent = qualityRange.value + '%';
+    render();
+  });
+
+  // ---------- crop mode ----------
+  let cropState = { left: 0, top: 0, width: 100, height: 100 }; // percentages of frame
+  let cropRatioLock = null; // pixel ratio w/h, or null for free
+
+  cropModeBtn.addEventListener('click', enterCropMode);
+  cropOpenBtn.addEventListener('click', enterCropMode);
+
+  function enterCropMode() {
+    if (!img) return;
+    cropImg.src = workCanvas.toDataURL('image/png');
+    // initialize rect from current crop (in % of the working image)
+    cropState.left = (crop.x / workW) * 100;
+    cropState.top = (crop.y / workH) * 100;
+    cropState.width = (crop.w / workW) * 100;
+    cropState.height = (crop.h / workH) * 100;
+    cropRatioLock = null;
+    cropRatios.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.ratio === 'free'));
+    cropRect.classList.remove('locked');
+    previewWrap.classList.add('crop-hidden');
+    cropStage.classList.add('active');
+    // wait for image layout then paint rect
+    requestAnimationFrame(paintCropRect);
+  }
+
+  function exitCropMode() {
+    cropStage.classList.remove('active');
+    previewWrap.classList.remove('crop-hidden');
+  }
+
+  cropCancelBtn.addEventListener('click', exitCropMode);
+
+  cropApplyBtn.addEventListener('click', () => {
+    crop.x = Math.round(cropState.left / 100 * workW);
+    crop.y = Math.round(cropState.top / 100 * workH);
+    crop.w = Math.max(1, Math.round(cropState.width / 100 * workW));
+    crop.h = Math.max(1, Math.round(cropState.height / 100 * workH));
+    // clamp inside bounds
+    crop.x = Math.min(crop.x, workW - crop.w);
+    crop.y = Math.min(crop.y, workH - crop.h);
+
+    widthInput.value = crop.w;
+    heightInput.value = crop.h;
+    scaleRange.value = 100;
+    scaleValue.textContent = '100%';
+    updateCropInfo();
+    exitCropMode();
+    render();
+  });
+
+  cropResetBtn.addEventListener('click', () => {
+    if (!img) return;
+    crop = { x: 0, y: 0, w: workW, h: workH };
+    widthInput.value = workW;
+    heightInput.value = workH;
+    scaleRange.value = 100;
+    scaleValue.textContent = '100%';
+    updateCropInfo();
+    render();
+  });
+
+  function paintCropRect() {
+    cropRect.style.left = cropState.left + '%';
+    cropRect.style.top = cropState.top + '%';
+    cropRect.style.width = cropState.width + '%';
+    cropRect.style.height = cropState.height + '%';
+  }
+
+  // aspect ratio presets (swap button is handled separately, below)
+  cropRatios.querySelectorAll('button[data-ratio]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      cropRatios.querySelectorAll('button[data-ratio]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const val = btn.dataset.ratio;
+      if (val === 'free') {
+        cropRatioLock = null;
+        cropRect.classList.remove('locked');
+        return;
+      }
+      let ratio;
+      if (val === 'orig') ratio = workW / workH;
+      else {
+        const [rw, rh] = val.split(':').map(Number);
+        ratio = rw / rh;
+      }
+      cropRatioLock = ratio;
+      cropRect.classList.add('locked');
+      reshapeToRatio(ratio);
+    });
+  });
+
+  // reshape the current rect to a given pixel aspect ratio (w/h),
+  // centered on the current center, as large as fits within the frame
+  function reshapeToRatio(ratio) {
+    const k = workW / (ratio * workH); // height% per width%
+    let newWidth = Math.min(100, 100 / k);
+    let newHeight = newWidth * k;
+    const cx = cropState.left + cropState.width / 2;
+    const cy = cropState.top + cropState.height / 2;
+    let left = clamp(cx - newWidth / 2, 0, 100 - newWidth);
+    let top = clamp(cy - newHeight / 2, 0, 100 - newHeight);
+    cropState = { left, top, width: newWidth, height: newHeight };
+    paintCropRect();
+  }
+
+  // orientation swap: exchange the rect's pixel width/height (and invert any
+  // locked ratio to match), keeping the same center — like iPhone's crop toggle
+  cropSwapBtn.addEventListener('click', () => {
+    if (!img) return;
+    const pxW = cropState.width / 100 * workW;
+    const pxH = cropState.height / 100 * workH;
+    let newWidthPct = Math.min(100, (pxH / workW) * 100);
+    let newHeightPct = Math.min(100, (pxW / workH) * 100);
+    const cx = cropState.left + cropState.width / 2;
+    const cy = cropState.top + cropState.height / 2;
+    const left = clamp(cx - newWidthPct / 2, 0, 100 - newWidthPct);
+    const top = clamp(cy - newHeightPct / 2, 0, 100 - newHeightPct);
+    cropState = { left, top, width: newWidthPct, height: newHeightPct };
+    if (cropRatioLock) cropRatioLock = 1 / cropRatioLock;
+    paintCropRect();
+  });
+
+  function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+
+  // dragging: move whole rect
+  let dragMode = null; // 'move' | handle name | null
+  let dragStart = null;
+
+  cropRect.addEventListener('pointerdown', (e) => {
+    if (e.target.classList.contains('crop-handle')) return; // handled separately
+    startDrag('move', e);
+  });
+  cropRect.querySelectorAll('.crop-handle').forEach(h => {
+    h.addEventListener('pointerdown', (e) => { e.stopPropagation(); startDrag(h.dataset.handle, e); });
+  });
+
+  function startDrag(mode, e) {
+    e.preventDefault();
+    dragMode = mode;
+    const frameRect = cropFrame.getBoundingClientRect();
+    dragStart = {
+      px: (e.clientX - frameRect.left) / frameRect.width * 100,
+      py: (e.clientY - frameRect.top) / frameRect.height * 100,
+      state: { ...cropState },
+      frameRect
+    };
+    window.addEventListener('pointermove', onDrag);
+    window.addEventListener('pointerup', endDrag);
+  }
+
+  function onDrag(e) {
+    if (!dragMode) return;
+    const fr = dragStart.frameRect;
+    const px = clamp((e.clientX - fr.left) / fr.width * 100, 0, 100);
+    const py = clamp((e.clientY - fr.top) / fr.height * 100, 0, 100);
+    const s = dragStart.state;
+    const minSize = 4;
+
+    if (dragMode === 'move') {
+      const dx = px - dragStart.px;
+      const dy = py - dragStart.py;
+      cropState.left = clamp(s.left + dx, 0, 100 - s.width);
+      cropState.top = clamp(s.top + dy, 0, 100 - s.height);
+      cropState.width = s.width;
+      cropState.height = s.height;
+      paintCropRect();
+      return;
+    }
+
+    let { left, top, width, height } = s;
+    let right = left + width, bottom = top + height;
+
+    if (cropRatioLock) {
+      const k = workW / (cropRatioLock * workH); // height% per width%
+      if (dragMode === 'se') {
+        let w = clamp(px - left, minSize, 100 - left);
+        let h = w * k;
+        if (top + h > 100) { h = 100 - top; w = h / k; }
+        right = left + w; bottom = top + h;
+      } else if (dragMode === 'nw') {
+        let w = clamp(right - px, minSize, right);
+        let h = w * k;
+        if (bottom - h < 0) { h = bottom; w = h / k; }
+        left = right - w; top = bottom - h;
+      } else if (dragMode === 'ne') {
+        let w = clamp(px - left, minSize, 100 - left);
+        let h = w * k;
+        if (bottom - h < 0) { h = bottom; w = h / k; }
+        right = left + w; top = bottom - h;
+      } else if (dragMode === 'sw') {
+        let w = clamp(right - px, minSize, right);
+        let h = w * k;
+        if (top + h > 100) { h = 100 - top; w = h / k; }
+        left = right - w; bottom = top + h;
+      }
+      cropState = { left, top, width: right - left, height: bottom - top };
+    } else {
+      if (dragMode.includes('n')) top = clamp(py, 0, bottom - minSize);
+      if (dragMode.includes('s')) bottom = clamp(py, top + minSize, 100);
+      if (dragMode.includes('w')) left = clamp(px, 0, right - minSize);
+      if (dragMode.includes('e')) right = clamp(px, left + minSize, 100);
+      cropState = { left, top, width: right - left, height: bottom - top };
+    }
+    paintCropRect();
+  }
+
+  function endDrag() {
+    dragMode = null;
+    window.removeEventListener('pointermove', onDrag);
+    window.removeEventListener('pointerup', endDrag);
+  }
+
+  // ---------- compare slider ----------
+  function applyBarPosition() {
+    dragBar.style.left = barPct + '%';
+    afterCanvas.style.clipPath = `inset(0 ${100 - barPct}% 0 0)`;
+  }
+  applyBarPosition();
+
+  let barDragging = false;
+  function barPointerDown(e) {
+    barDragging = true;
+    dragBar.classList.add('active');
+    moveBarTo(e.clientX);
+  }
+  function moveBarTo(clientX) {
+    const rect = compareBox.getBoundingClientRect();
+    barPct = clamp((clientX - rect.left) / rect.width * 100, 0, 100);
+    applyBarPosition();
+  }
+  dragBar.addEventListener('pointerdown', (e) => { e.stopPropagation(); barPointerDown(e); });
+  compareBox.addEventListener('pointerdown', (e) => { barPointerDown(e); });
+  window.addEventListener('pointermove', (e) => { if (barDragging) moveBarTo(e.clientX); });
+  window.addEventListener('pointerup', () => { barDragging = false; dragBar.classList.remove('active'); });
+
+  // ---------- rendering ----------
+  function render() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(doRender, 50);
+  }
+
+  function fitContain(sw, sh, bw, bh) {
+    const scale = Math.min(bw / sw, bh / sh);
+    const dw = sw * scale, dh = sh * scale;
+    return { dx: (bw - dw) / 2, dy: (bh - dh) / 2, dw, dh };
+  }
+
+  // Decide the on-screen pixel size of the compare box, contained within the
+  // available area while exactly preserving the output's aspect ratio.
+  // (Avoids relying on CSS max-width/max-height + aspect-ratio together,
+  // which do not compose reliably when both limits are active at once.)
+  function layoutCompareBox(w, h) {
+    const availW = Math.min(previewWrap.clientWidth || 480, 640);
+    const availH = Math.min(window.innerHeight * 0.55, 480);
+    const scale = Math.min(availW / w, availH / h);
+    const dispW = Math.max(1, Math.round(w * scale));
+    const dispH = Math.max(1, Math.round(h * scale));
+    compareBox.style.width = dispW + 'px';
+    compareBox.style.height = dispH + 'px';
+    return { dispW, dispH };
+  }
+
+  let renderToken = 0; // guards against out-of-order async redraws
+
+  function doRender() {
+    if (!img) return;
+    const token = ++renderToken;
+
+    let w = parseInt(widthInput.value, 10) || srcW();
+    let h = parseInt(heightInput.value, 10) || srcH();
+    w = Math.max(1, w); h = Math.max(1, h);
+
+    // 1. offscreen output canvas (real pixels, used for download + size estimate)
+    outputCanvas.width = w;
+    outputCanvas.height = h;
+    outputCtx.clearRect(0, 0, w, h);
+    outputCtx.imageSmoothingEnabled = true;
+    outputCtx.imageSmoothingQuality = 'high';
+    outputCtx.drawImage(workCanvas, crop.x, crop.y, crop.w, crop.h, 0, 0, w, h);
+
+    outDimEl.textContent = `${w} × ${h}px`;
+    previewLabel.textContent = `${w} × ${h}px（比較元: ${crop.w} × ${crop.h}px）`;
+
+    // 2. size the compare box in real pixels (no async layout dependency)
+    const { dispW, dispH } = layoutCompareBox(w, h);
+    const dpr = window.devicePixelRatio || 1;
+    const bw = Math.max(1, Math.round(dispW * dpr));
+    const bh = Math.max(1, Math.round(dispH * dpr));
+
+    // before canvas: the SAME crop region as the output, at native resolution —
+    // aligned framing so the slider compares resolution/quality, not composition
+    beforeCanvas.width = bw; beforeCanvas.height = bh;
+    beforeCtx.clearRect(0, 0, bw, bh);
+    beforeCtx.imageSmoothingEnabled = true;
+    beforeCtx.imageSmoothingQuality = 'high';
+    const fit = fitContain(crop.w, crop.h, bw, bh);
+    beforeCtx.drawImage(workCanvas, crop.x, crop.y, crop.w, crop.h, fit.dx, fit.dy, fit.dw, fit.dh);
+
+    // after canvas: draw an immediate (uncompressed) preview so the UI never
+    // looks blank, then replace it once the real encoded result is decoded.
+    afterCanvas.width = bw; afterCanvas.height = bh;
+    afterCtx.clearRect(0, 0, bw, bh);
+    afterCtx.imageSmoothingEnabled = true;
+    afterCtx.imageSmoothingQuality = 'high';
+    afterCtx.drawImage(outputCanvas, 0, 0, bw, bh);
+
+    // 3. encode with the chosen format/quality, then decode the *actual*
+    // compressed bytes back into an image so quality changes are visible.
+    const type = currentTargetType();
+    const q = parseInt(qualityRange.value, 10) / 100;
+    const useQuality = (type === 'image/jpeg' || type === 'image/webp');
+
+    outputCanvas.toBlob((blob) => {
+      if (!blob || token !== renderToken) return;
+      outSizeEl.textContent = humanSize(blob.size);
+      outSizeEl.classList.remove('down', 'up');
+      if (origFileSize) outSizeEl.classList.add(blob.size < origFileSize ? 'down' : 'up');
+      downloadBtn.disabled = false;
+
+      if (window.createImageBitmap) {
+        createImageBitmap(blob).then((bitmap) => {
+          if (token !== renderToken) return;
+          afterCtx.clearRect(0, 0, bw, bh);
+          afterCtx.drawImage(bitmap, 0, 0, bw, bh);
+          bitmap.close && bitmap.close();
+        }).catch(() => { /* fall back to the uncompressed preview already drawn */ });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const reImg = new Image();
+        reImg.onload = () => {
+          if (token === renderToken) {
+            afterCtx.clearRect(0, 0, bw, bh);
+            afterCtx.drawImage(reImg, 0, 0, bw, bh);
+          }
+          URL.revokeObjectURL(url);
+        };
+        reImg.src = url;
+      }
+    }, type, useQuality ? q : undefined);
+  }
+
+  downloadBtn.addEventListener('click', () => {
+    if (!img) return;
+    const type = currentTargetType();
+    const q = parseInt(qualityRange.value, 10) / 100;
+    const useQuality = (type === 'image/jpeg' || type === 'image/webp');
+    const ext = type === 'image/jpeg' ? 'jpg' : type === 'image/webp' ? 'webp' : type === 'image/png' ? 'png' : 'img';
+
+    outputCanvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const suffix = filenameSizeToggle.checked ? `_${outputCanvas.width}x${outputCanvas.height}` : '';
+      a.download = `${origFileName}${suffix}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }, type, useQuality ? q : undefined);
+  });
+
+  window.addEventListener('resize', () => { if (img) render(); });
+})();
+</script>
+
+</body>
+</html>

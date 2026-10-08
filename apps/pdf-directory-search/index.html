@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF フォルダ検索 | App Deck</title>
+<style>
+  :root{
+    --bg: #1b1d1f;
+    --panel: #232629;
+    --line: #34383c;
+    --text: #e6e6e6;
+    --muted: #9aa0a6;
+    --accent: #5b8cff;
+    --danger: #d9534f;
+  }
+  html, body{ height:100%; margin:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+    box-sizing: border-box;
+    min-height: 100vh;
+  }
+  main{ width: min(680px, 100%); }
+  h1{ font-size: 18px; margin: 0 0 6px; }
+  p.lead{ color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0 0 24px; }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .row{ display:flex; align-items:center; gap:10px; flex-wrap: wrap; }
+
+  button{
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button:hover{ opacity:0.9; }
+  button.secondary{
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+  }
+  button.secondary:hover{ border-color: var(--accent); color: var(--accent); }
+  button:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  label.checkbox{
+    display:flex; align-items:center; gap:6px;
+    font-size: 13px; color: var(--muted);
+    cursor: pointer;
+  }
+
+  #dir-label{
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  input[type="search"], input[type="text"]{
+    width: 100%;
+    box-sizing: border-box;
+    background: #1b1d1f;
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  input[type="search"]:focus, input[type="text"]:focus{ outline: none; border-color: var(--accent); }
+
+  .hint-small{
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 6px 0 0;
+  }
+
+  #status{
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  #list{
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+  #list li{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  #list li:last-child{ border-bottom: none; }
+  #list .name{
+    flex: 1;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #list .path{
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  #list button.open-one{
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--line);
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  #list button.open-one:hover{ border-color: var(--accent); }
+
+  #empty-msg, #unsupported{
+    font-size: 13px;
+    color: var(--muted);
+    padding: 20px 0;
+    text-align: center;
+  }
+
+  #unsupported{ display:none; color: var(--danger); }
+  .launcher-link { position: fixed; top: 16px; right: 16px; color: var(--muted); font-size: 12px; text-decoration: none; }
+  .launcher-link:hover { color: var(--accent); }
+</style>
+</head>
+<body data-app-id="pdf-directory-search">
+<a class="launcher-link" href="../../index.html#/">← App Deck に戻る</a>
+<main>
+  <h1>PDF フォルダ検索</h1>
+  <p class="lead">PDFを貯めているフォルダを選ぶと、ファイル名で絞り込んでブラウザのタブで開けます。ファイルは外部に送信されず、選んだフォルダの読み取りのみ行います。</p>
+
+  <div id="unsupported" class="card">
+    お使いのブラウザはこの機能（File System Access API）に対応していません。Chrome または Edge でお試しください。
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button id="pick-dir">フォルダを選択</button>
+      <label class="checkbox">
+        <input type="checkbox" id="include-sub" checked>
+        サブフォルダも含める
+      </label>
+    </div>
+    <div id="dir-label"></div>
+    <div id="status"></div>
+    <input type="text" id="root-path" placeholder="（任意）選んだフォルダのフルパスを貼り付け 例: C:\Users\name\pdf" value="">
+    <p class="hint-small">
+      ブラウザの仕様上、フォルダ選択だけでは絶対パスを取得できません。ここにフルパス（エクスプローラーのアドレスバーからコピー）を入力すると、blobではなく <code>file:///</code> のURLで開けるようになり、Geminiなど一部の拡張機能・AIツールからも読み込めるようになります。空欄なら従来通りblobで開きます。
+    </p>
+  </div>
+
+  <div class="card" id="search-card" style="display:none;">
+    <input type="search" id="filter" placeholder="ファイル名で絞り込み（例: 請求書 2024）">
+    <div class="row" style="margin-top:12px;">
+      <button id="open-selected" disabled>選択したPDFを開く（タブ）</button>
+      <button class="secondary" id="select-all">すべて選択</button>
+      <button class="secondary" id="select-none">選択解除</button>
+    </div>
+    <ul id="list"></ul>
+    <div id="empty-msg" style="display:none;">一致するPDFがありません</div>
+  </div>
+</main>
+
+<script>
+  const pickBtn = document.getElementById('pick-dir');
+  const includeSub = document.getElementById('include-sub');
+  const dirLabel = document.getElementById('dir-label');
+  const statusEl = document.getElementById('status');
+  const searchCard = document.getElementById('search-card');
+  const filterInput = document.getElementById('filter');
+  const listEl = document.getElementById('list');
+  const emptyMsg = document.getElementById('empty-msg');
+  const openSelectedBtn = document.getElementById('open-selected');
+  const selectAllBtn = document.getElementById('select-all');
+  const selectNoneBtn = document.getElementById('select-none');
+  const unsupportedEl = document.getElementById('unsupported');
+  const rootPathInput = document.getElementById('root-path');
+
+  // 前回入力したフルパスを記憶しておく（このパソコン・このブラウザ内のみ）
+  try {
+    const savedRoot = localStorage.getItem('pdf-dir-search:rootPath');
+    if (savedRoot) rootPathInput.value = savedRoot;
+  } catch (e) { /* localStorageが使えない環境は無視 */ }
+  rootPathInput.addEventListener('change', () => {
+    try { localStorage.setItem('pdf-dir-search:rootPath', rootPathInput.value.trim()); }
+    catch (e) { /* 無視 */ }
+  });
+
+  let allFiles = []; // { name, path, handle }
+
+  if (typeof window.showDirectoryPicker !== 'function') {
+    unsupportedEl.style.display = 'block';
+    pickBtn.disabled = true;
+  }
+
+  async function collectPdfFiles(dirHandle, path, recursive) {
+    const results = [];
+    for await (const [name, handle] of dirHandle.entries()) {
+      const currentPath = path ? path + '/' + name : name;
+      if (handle.kind === 'file') {
+        if (name.toLowerCase().endsWith('.pdf')) {
+          results.push({ name, path: currentPath, handle });
+        }
+      } else if (handle.kind === 'directory' && recursive) {
+        const nested = await collectPdfFiles(handle, currentPath, recursive);
+        results.push(...nested);
+      }
+    }
+    return results;
+  }
+
+  pickBtn.addEventListener('click', async () => {
+    try {
+      const dirHandle = await window.showDirectoryPicker();
+      dirLabel.textContent = 'フォルダ: ' + dirHandle.name;
+      statusEl.textContent = '読み込み中…';
+      openSelectedBtn.disabled = true;
+      listEl.innerHTML = '';
+      searchCard.style.display = 'none';
+
+      const files = await collectPdfFiles(dirHandle, '', includeSub.checked);
+      files.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      allFiles = files;
+
+      statusEl.textContent = `${files.length} 件のPDFが見つかりました`;
+      searchCard.style.display = 'block';
+      filterInput.value = '';
+      renderList('');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        statusEl.textContent = 'エラー: ' + err.message;
+      }
+    }
+  });
+
+  // 全角/半角・大文字小文字のゆらぎを吸収して比較用の文字列にする
+  function normalize(str) {
+    return str.normalize('NFKC').toLowerCase();
+  }
+
+  // クエリをスペース（全角スペース含む）区切りの単語に分解
+  function parseTerms(query) {
+    return normalize(query)
+      .split(/[\s\u3000]+/)
+      .filter(t => t.length > 0);
+  }
+
+  // マッチした部分を <mark> で囲む
+  function highlight(text, terms) {
+    if (terms.length === 0) return document.createTextNode(text);
+    const normText = normalize(text);
+    const ranges = [];
+    for (const term of terms) {
+      let idx = 0;
+      while (true) {
+        const pos = normText.indexOf(term, idx);
+        if (pos === -1) break;
+        ranges.push([pos, pos + term.length]);
+        idx = pos + term.length;
+      }
+    }
+    if (ranges.length === 0) return document.createTextNode(text);
+    ranges.sort((a, b) => a[0] - b[0]);
+    const merged = [ranges[0]];
+    for (const [start, end] of ranges.slice(1)) {
+      const last = merged[merged.length - 1];
+      if (start <= last[1]) last[1] = Math.max(last[1], end);
+      else merged.push([start, end]);
+    }
+
+    const frag = document.createDocumentFragment();
+    let cursor = 0;
+    for (const [start, end] of merged) {
+      if (start > cursor) frag.appendChild(document.createTextNode(text.slice(cursor, start)));
+      const mark = document.createElement('mark');
+      mark.style.cssText = 'background:#5b8cff55;color:inherit;border-radius:2px;';
+      mark.textContent = text.slice(start, end);
+      frag.appendChild(mark);
+      cursor = end;
+    }
+    if (cursor < text.length) frag.appendChild(document.createTextNode(text.slice(cursor)));
+    return frag;
+  }
+
+  function renderList(query) {
+    const terms = parseTerms(query);
+    const filtered = terms.length
+      ? allFiles.filter(f => {
+          const haystack = normalize(f.path);
+          return terms.every(term => haystack.includes(term));
+        })
+      : allFiles;
+
+    listEl.innerHTML = '';
+    emptyMsg.style.display = filtered.length === 0 ? 'block' : 'none';
+
+    for (const file of filtered) {
+      const li = document.createElement('li');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'pick';
+      checkbox.dataset.path = file.path;
+
+      const nameWrap = document.createElement('div');
+      nameWrap.className = 'name';
+      nameWrap.appendChild(highlight(file.name, terms));
+      const pathSpan = document.createElement('span');
+      pathSpan.className = 'path';
+      if (file.path !== file.name) {
+        pathSpan.appendChild(highlight(file.path, terms));
+      }
+      nameWrap.appendChild(pathSpan);
+
+      const openBtn = document.createElement('button');
+      openBtn.className = 'open-one';
+      openBtn.textContent = '開く';
+      openBtn.addEventListener('click', () => openFiles([file]));
+
+      li.appendChild(checkbox);
+      li.appendChild(nameWrap);
+      li.appendChild(openBtn);
+      listEl.appendChild(li);
+    }
+
+    updateOpenSelectedState();
+  }
+
+  function updateOpenSelectedState() {
+    const anyChecked = listEl.querySelectorAll('.pick:checked').length > 0;
+    openSelectedBtn.disabled = !anyChecked;
+  }
+
+  listEl.addEventListener('change', (e) => {
+    if (e.target.classList.contains('pick')) updateOpenSelectedState();
+  });
+
+  filterInput.addEventListener('input', () => renderList(filterInput.value));
+
+  selectAllBtn.addEventListener('click', () => {
+    listEl.querySelectorAll('.pick').forEach(cb => cb.checked = true);
+    updateOpenSelectedState();
+  });
+  selectNoneBtn.addEventListener('click', () => {
+    listEl.querySelectorAll('.pick').forEach(cb => cb.checked = false);
+    updateOpenSelectedState();
+  });
+
+  // ルートパス（例: C:\Users\name\pdf や /Users/name/pdf）と
+  // フォルダ内での相対パス（例: sub/file.pdf）から file:/// URL を組み立てる
+  function toFileUrl(rootPath, relativePath) {
+    let root = rootPath.trim().replace(/\\/g, '/').replace(/\/+$/, '');
+    if (!root) return null;
+    const isWindows = /^[a-zA-Z]:/.test(root);
+    const fullPath = root + '/' + relativePath;
+    const segments = fullPath.split('/');
+    const encoded = segments.map((seg, i) => {
+      if (i === 0 && /^[a-zA-Z]:$/.test(seg)) return seg; // ドライブレターはそのまま
+      return encodeURIComponent(seg);
+    });
+    const encodedPath = encoded.join('/');
+    return isWindows
+      ? ('file:///' + encodedPath)
+      : ('file://' + (encodedPath.startsWith('/') ? encodedPath : '/' + encodedPath));
+  }
+
+  const MAX_TOTAL_BYTES = 300 * 1024 * 1024; // 300MB の目安で警告
+
+  function formatBytes(bytes) {
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  // タブが閉じられたらメモリを解放する（数秒おきにポーリング）
+  function watchAndRevoke(win, url) {
+    const timer = setInterval(() => {
+      if (win.closed) {
+        URL.revokeObjectURL(url);
+        clearInterval(timer);
+      }
+    }, 2000);
+  }
+
+  async function openFiles(files) {
+    const root = rootPathInput.value.trim();
+
+    for (const file of files) {
+      try {
+        if (root) {
+          // フルパスが分かっている場合は file:/// で直接開く（メモリコピー不要）
+          const fileUrl = toFileUrl(root, file.path);
+          if (fileUrl) {
+            const win = window.open(fileUrl, '_blank');
+            if (!win) {
+              console.warn('ポップアップがブロックされました:', fileUrl);
+            }
+            continue;
+          }
+        }
+        // フルパス未入力時は従来通りblobで開く
+        const blob = await file.handle.getFile();
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, '_blank');
+        if (win) {
+          watchAndRevoke(win, url);
+        } else {
+          // ポップアップがブロックされた場合はURLだけ残るので念のため解放
+          URL.revokeObjectURL(url);
+        }
+      } catch (err) {
+        console.error('開けませんでした:', file.path, err);
+      }
+    }
+  }
+
+  openSelectedBtn.addEventListener('click', async () => {
+    const checkedPaths = Array.from(listEl.querySelectorAll('.pick:checked'))
+      .map(cb => cb.dataset.path);
+    const files = allFiles.filter(f => checkedPaths.includes(f.path));
+    if (files.length === 0) return;
+
+    const root = rootPathInput.value.trim();
+
+    if (root) {
+      // file:/// で開く場合はメモリにコピーしないので、タブ数だけ確認すれば十分
+      if (files.length > 8) {
+        const ok = confirm(`${files.length} 個のタブを開きます。よろしいですか？`);
+        if (!ok) return;
+      }
+      openFiles(files);
+      return;
+    }
+
+    // フルパス未入力の場合は従来通りblob方式。合計サイズを事前に確認する
+    let totalBytes = 0;
+    const sizedFiles = [];
+    for (const f of files) {
+      try {
+        const blob = await f.handle.getFile();
+        totalBytes += blob.size;
+        sizedFiles.push({ ...f, blob });
+      } catch (err) {
+        console.error('読み込み失敗:', f.path, err);
+      }
+    }
+
+    if (files.length > 8 || totalBytes > MAX_TOTAL_BYTES) {
+      const ok = confirm(
+        `${files.length} 個のタブを開きます（合計 約${formatBytes(totalBytes)}）。\nメモリを多く使う可能性がありますが、開きますか？`
+      );
+      if (!ok) return;
+    }
+
+    for (const f of sizedFiles) {
+      const url = URL.createObjectURL(f.blob);
+      const win = window.open(url, '_blank');
+      if (win) {
+        watchAndRevoke(win, url);
+      } else {
+        URL.revokeObjectURL(url);
+      }
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "app-deck",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync:manifest": "node ./scripts/sync-file-manifest.mjs",
+    "build:css": "npx @tailwindcss/cli -i ./src/tailwind.css -o ./assets/styles.css --minify",
+    "dev": "npx serve ."
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}
