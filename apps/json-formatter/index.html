@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101827" />
+  <title>JSON フォーマッタ | App Deck</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Consolas, "Yu Gothic UI", monospace; background: #101827; color: #e8f0ff; }
+    * { box-sizing: border-box; } body { margin: 0; min-height: 100vh; } button, textarea { font: inherit; }
+    header { min-height: 64px; display: flex; align-items: center; gap: 18px; padding: 0 26px; border-bottom: 1px solid #293955; background: #141f33; }
+    h1 { margin: 0; font-size: 17px; letter-spacing: -.03em; } .tagline { color: #91a4c8; font-family: system-ui, sans-serif; font-size: 13px; }
+    .back { margin-left: auto; color: #9fdbff; text-decoration: none; font-family: system-ui, sans-serif; font-size: 13px; }
+    main { width: min(1120px, calc(100% - 32px)); margin: 34px auto; } .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+    button { border: 1px solid #3e5682; border-radius: 8px; padding: 9px 13px; color: #dcecff; background: #182641; cursor: pointer; font-size: 13px; }
+    button.primary { background: #2f8ec3; border-color: #4db8eb; color: #061622; font-weight: 700; } button:hover { filter: brightness(1.13); }
+    .workspace { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; } .panel { min-height: 520px; display: flex; flex-direction: column; border: 1px solid #2b3c5c; border-radius: 12px; overflow: hidden; background: #111b2e; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #2b3c5c; color: #aebfe0; font-family: system-ui, sans-serif; font-size: 13px; }
+    textarea { width: 100%; min-height: 0; flex: 1; resize: vertical; padding: 16px; border: 0; outline: none; background: #0c1424; color: #e7f2ff; font-size: 13px; line-height: 1.65; tab-size: 2; }
+    #status { margin-left: auto; color: #8fa5cc; font-family: system-ui, sans-serif; font-size: 12px; } #status.error { color: #ff9f9f; } #status.ok { color: #8ee1ae; }
+    .hint { margin: 14px 0 0; color: #8b9bb9; font-family: system-ui, sans-serif; font-size: 12px; line-height: 1.6; }
+    @media (max-width: 760px) { header { padding: 0 16px; gap: 10px; } .tagline { display: none; } main { width: min(100% - 24px, 1120px); margin: 20px auto; } .workspace { grid-template-columns: 1fr; } .panel { min-height: 320px; } }
+  </style>
+</head>
+<body data-app-id="json-formatter">
+  <header><h1>JSON フォーマッタ</h1><span class="tagline">整形・圧縮・検証 — すべてブラウザ内で完結</span><a class="back" href="../../index.html#/">← App Deck に戻る</a></header>
+  <main>
+    <div class="toolbar">
+      <button class="primary" id="format" type="button">整形</button>
+      <button id="minify" type="button">圧縮</button>
+      <button id="validate" type="button">検証</button>
+      <button id="copy" type="button">結果をコピー</button>
+      <button id="download" type="button">JSON を保存</button>
+      <span id="status" role="status">JSON を入力してください</span>
+    </div>
+    <div class="workspace">
+      <section class="panel"><div class="panel-head"><span>入力</span><button id="clear" type="button">クリア</button></div><textarea id="input" spellcheck="false" placeholder='例: {"name":"App Deck","enabled":true}' aria-label="JSON入力"></textarea></section>
+      <section class="panel"><div class="panel-head"><span>結果</span><span>読み取り専用</span></div><textarea id="output" spellcheck="false" readonly aria-label="JSON結果"></textarea></section>
+    </div>
+    <p class="hint">入力内容はネットワークに送信されません。Tab キーでインデントを入力できます。</p>
+  </main>
+  <script>
+    (() => {
+      const input = document.querySelector('#input'); const output = document.querySelector('#output'); const status = document.querySelector('#status');
+      const setStatus = (message, kind = '') => { status.textContent = message; status.className = kind; };
+      const parse = () => { try { return { ok: true, value: JSON.parse(input.value) }; } catch (error) { setStatus(`エラー: ${error.message}`, 'error'); return { ok: false }; } };
+      document.querySelector('#format').addEventListener('click', () => { const result = parse(); if (!result.ok) return; output.value = JSON.stringify(result.value, null, 2); setStatus('整形しました', 'ok'); });
+      document.querySelector('#minify').addEventListener('click', () => { const result = parse(); if (!result.ok) return; output.value = JSON.stringify(result.value); setStatus('圧縮しました', 'ok'); });
+      document.querySelector('#validate').addEventListener('click', () => { const result = parse(); if (!result.ok) return; setStatus(`有効な JSON です（${Array.isArray(result.value) ? '配列' : typeof result.value}）`, 'ok'); });
+      document.querySelector('#clear').addEventListener('click', () => { input.value = ''; output.value = ''; setStatus('JSON を入力してください'); input.focus(); });
+      document.querySelector('#copy').addEventListener('click', async () => { if (!output.value) { setStatus('先に整形または圧縮してください', 'error'); return; } try { await navigator.clipboard.writeText(output.value); setStatus('結果をコピーしました', 'ok'); } catch { output.select(); document.execCommand('copy'); setStatus('結果をコピーしました', 'ok'); } });
+      document.querySelector('#download').addEventListener('click', () => { if (!output.value) { setStatus('先に整形または圧縮してください', 'error'); return; } const url = URL.createObjectURL(new Blob([output.value], { type: 'application/json' })); const link = Object.assign(document.createElement('a'), { href: url, download: 'formatted.json' }); link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); setStatus('JSON を保存しました', 'ok'); });
+      input.addEventListener('keydown', (event) => { if (event.key !== 'Tab') return; event.preventDefault(); const start = input.selectionStart; input.setRangeText('  ', start, input.selectionEnd, 'end'); });
+    })();
+  </script>
+</body>
+</html>

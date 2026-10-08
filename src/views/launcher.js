@@ -1,6 +1,7 @@
 const icons = {
   'document-search': '⌕',
   image: '▧',
+  code: '{}',
 };
 
 export function renderLauncher(root, manifest, plugins) {

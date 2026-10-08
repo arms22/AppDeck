@@ -4,7 +4,7 @@
   const root = document.querySelector('#app');
   const manifest = window.APP_DECK_FILE_MANIFEST;
   if (!manifest) return;
-  const icons = { 'document-search': '⌕', image: '▧' };
+  const icons = { 'document-search': '⌕', image: '▧', code: '{}' };
   const esc = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[c]);
 
   function launcher() {

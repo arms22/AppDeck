@@ -23,6 +23,16 @@
       "entry": "./apps/image-resizer/index.html",
       "type": "top-level",
       "enabled": true
+    },
+    {
+      "id": "json-formatter",
+      "name": "JSON フォーマッタ",
+      "description": "JSON を整形・圧縮・検証し、端末内でコピーまたは保存します。",
+      "icon": "code",
+      "category": "開発ツール",
+      "entry": "./apps/json-formatter/index.html",
+      "type": "top-level",
+      "enabled": true
     }
   ]
 }
