@@ -1,0 +1,18 @@
+/* Shared visual system for every top-level App Deck application. */
+:root {
+  --app-bg: #1b1d1f; --app-panel: #232629; --app-panel-raised: #292d31;
+  --app-line: #34383c; --app-text: #e6e6e6; --app-muted: #9aa0a6;
+  --app-accent: #5b8cff; --app-accent-text: #ffffff; --app-danger: #f28b82;
+  --bg: var(--app-bg); --panel: var(--app-panel); --panel-2: var(--app-panel-raised);
+  --line: var(--app-line); --text: var(--app-text); --muted: var(--app-muted);
+  --accent: var(--app-accent); --danger: var(--app-danger);
+}
+:root[data-theme="light"] { color-scheme: light; --app-bg:#f6f7f9; --app-panel:#ffffff; --app-panel-raised:#eef1f5; --app-line:#d5dbe3; --app-text:#1d2633; --app-muted:#667384; --app-accent:#276de8; --app-accent-text:#ffffff; --app-danger:#c9362a; }
+* { box-sizing: border-box; }
+.app-topbar { position: sticky; top: 0; z-index: 20; width: 100%; min-height: 58px; display: flex; align-items: center; gap: 14px; padding: 10px 24px; border-bottom: 1px solid var(--app-line); background: var(--app-panel); color: var(--app-text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", sans-serif; }
+.app-topbar__brand { color: var(--app-muted); text-decoration: none; font-size: 13px; }.app-topbar__title { font-size: 14px; font-weight: 700; }.app-topbar__spacer { flex: 1; }
+.app-topbar__label { color: var(--app-muted); font-size: 12px; }.app-topbar select { width: auto; flex: 0 0 auto; border: 1px solid var(--app-line); border-radius: 7px; padding: 6px 8px; background: var(--app-bg); color: var(--app-text); font: inherit; font-size: 12px; }
+@media (max-width: 560px) { .app-topbar { min-height: 52px; gap: 9px; padding: 8px 14px; }.app-topbar__brand { font-size: 0; }.app-topbar__brand::before { content: "←"; font-size: 16px; }.app-topbar__label { display: none; } }
+body[data-app-id="pdf-directory-search"] { display: block; padding: 0 16px 40px; }
+body[data-app-id="pdf-directory-search"] .app-topbar { width: calc(100% + 32px); margin: 0 -16px; }
+body[data-app-id="pdf-directory-search"] main { margin: 40px auto; }

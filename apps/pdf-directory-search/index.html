@@ -71,7 +71,7 @@
   input[type="search"], input[type="text"]{
     width: 100%;
     box-sizing: border-box;
-    background: #1b1d1f;
+    background: var(--bg);
     border: 1px solid var(--line);
     color: var(--text);
     border-radius: 8px;
@@ -141,9 +141,9 @@
   .launcher-link { position: fixed; top: 16px; right: 16px; color: var(--muted); font-size: 12px; text-decoration: none; }
   .launcher-link:hover { color: var(--accent); }
 </style>
+<link rel="stylesheet" href="../../assets/app-theme.css">
 </head>
-<body data-app-id="pdf-directory-search">
-<a class="launcher-link" href="../../index.html#/">← App Deck に戻る</a>
+<body data-app-id="pdf-directory-search" data-app-title="PDF フォルダ検索">
 <main>
   <h1>PDF フォルダ検索</h1>
   <p class="lead">PDFを貯めているフォルダを選ぶと、ファイル名で絞り込んでブラウザのタブで開けます。ファイルは外部に送信されず、選んだフォルダの読み取りのみ行います。</p>
@@ -481,5 +481,6 @@
     }
   });
 </script>
+<script src="../../assets/theme.js"></script>
 </body>
 </html>

@@ -269,7 +269,7 @@
   .stat-table dd.up { color: var(--danger); }
 
   .download-btn {
-    margin-top: 4px; background: var(--accent); color: #1b1a18; border: none; padding: 12px;
+    margin-top: 4px; background: var(--accent); color: var(--app-accent-text); border: none; padding: 12px;
     font-size: 13px; font-weight: 700; font-family: inherit; border-radius: 3px; cursor: pointer;
     transition: filter .15s ease;
   }
@@ -296,14 +296,9 @@
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 </style>
+<link rel="stylesheet" href="../../assets/app-theme.css">
 </head>
-<body data-app-id="image-resizer">
-
-<header>
-  <h1>画像リサイズツール</h1>
-  <span class="sub">crop · resize · resolution · quality — ブラウザ内で完結、アップロードなし</span>
-  <a class="launcher-link" href="../../index.html#/">← App Deck に戻る</a>
-</header>
+<body data-app-id="image-resizer" data-app-title="画像リサイズツール">
 
 <main>
   <section class="stage" id="stage">
@@ -1178,6 +1173,7 @@
   window.addEventListener('resize', () => { if (img) render(); });
 })();
 </script>
+<script src="../../assets/theme.js"></script>
 
 </body>
 </html>
