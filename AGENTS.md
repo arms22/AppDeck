@@ -28,7 +28,10 @@ Escape manifest-derived text before assigning it to `innerHTML`. Keep all app be
 - Save text files as UTF-8 and set `lang="ja"` and `<meta charset="UTF-8">` on Japanese app pages.
 - Prefer locally installed Japanese fonts for Japanese UI text, such as `"Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif`.
 - Choose fonts appropriate for numeric results and technical symbols. Verify symbols such as Ω, μ, ±, and ° at the actual display size and font weight.
-- Review Japanese UI wording for correct characters and terminology. Check unfamiliar or ambiguous terms against reliable Japanese sources when needed.
+- Use standard Japanese character forms and terminology in Japanese UI text (for example, 強 rather than 强). Check unfamiliar or ambiguous terms against reliable Japanese sources when needed.
+- Preserve valid Japanese characters outside the jōyō kanji list when appropriate for technical terms, color names, proper names, or quotations.
+- Distinguish character substitutions from font glyph differences: correct unintended characters in the source, and use Japanese fonts for Japanese glyph forms.
+- When correcting character forms, preserve the intended meaning, content, font size, and layout.
 - Validate both the source text and its rendered appearance in the browser. Source review confirms the characters used; visual review confirms their glyphs and readability.
 
 ## Architecture and App Registration

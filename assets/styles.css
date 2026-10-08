@@ -1,4 +1,9 @@
 /* Prebuilt static CSS. The Tailwind source entrypoint lives in src/tailwind.css. */
+.hero .reorder-help { font-size:13px; line-height:1.8; }
+.app-card.dragging { opacity:.45; }
+.app-card.drop-target { border-color:#7dd3fc; box-shadow:0 0 0 3px #7dd3fc; }
+.app-card:focus-visible { outline:3px solid #7dd3fc; outline-offset:4px; }
+.reorder-status { font-size:14px; color:#bae6fd; min-height:1.6em; }
 :root { color-scheme: dark; font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif; background:#090d18; color:#edf2ff; }
 * { box-sizing:border-box; } body { margin:0; min-height:100vh; } a { color:inherit; text-decoration:none; }
 .shell { width:min(1120px, calc(100% - 40px)); margin:0 auto; padding:88px 0; }
